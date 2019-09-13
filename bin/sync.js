@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const {lstatSync, readdirSync, readFileSync, writeFileSync} = require('fs')
+const {lstatSync, readdirSync, readFileSync, writeFileSync, mkdirSync, existsSync} = require('fs')
 const {join, parse} = require('path').posix
 const readline = require('readline')
 const https = require('https')
@@ -215,7 +215,7 @@ async function write () {
       }
 
       try {
-        writeFileSync(filePath, contents, {flag: 'w'})
+        writeFileSyncRecursive(filePath, contents, {flag: 'w'})
         return Promise.resolve()
       } catch (e) {
         console.log(e)
@@ -243,6 +243,18 @@ function handleResponse (res, op, successCb, type, path) {
       console.log(' ', res.substring(0, 1000))
     }
   }
+}
+// like writeFileSync but creates all folder paths if not exist
+// ----------------------------------------------------------
+function writeFileSyncRecursive(filename, content, charset) {
+	// create folder path if not exists
+	filename.split('/').slice(0,-1).reduce( (last, folder)=>{
+		let folderPath = last ? (last + '/' + folder) : folder
+		if (!existsSync(folderPath)) mkdirSync(folderPath)
+		return folderPath
+	})
+	
+	writeFileSync(filename, content, charset)
 }
 
 function deleteExistingFile (res, type, path) {

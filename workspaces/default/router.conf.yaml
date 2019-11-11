@@ -1,0 +1,12 @@
+/login: content/login.txt
+/logout: content/logout.txt
+/register: content/register.txt
+/settings: content/settings.txt
+/reset-password: content/reset-password.txt
+/account/invalidate-verification: content/account/invalidate-verification.txt
+/account/resend-verification: content/account/resend-verification.txt
+/account/verify: content/account/resend-verification.txt
+/documentation: content/documentation/index.txt
+/documentation/httpbin: specs/httpbin.json
+/documentation/petstore: specs/petstore.yaml
+/*: content/index.txt

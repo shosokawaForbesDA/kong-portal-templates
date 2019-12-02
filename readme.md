@@ -2,6 +2,8 @@
 
 Developer Portal Template Files for Kong Enterprise Edition
 
+This is an example of how to write a SPA (Single Page App in Kong Developer Portal)
+
 >NOTE: These templates are for use with Kong Developer Portal `v1.3` and above. Please checkout https://github.com/Kong/kong-portal-templates/master-legacy for `v0.36.*` and below.
 
 ## Requirements

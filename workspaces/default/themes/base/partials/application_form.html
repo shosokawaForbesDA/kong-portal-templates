@@ -1,0 +1,80 @@
+    {% local method = kong.request.get_method() %}
+
+    {% if method == 'POST' then %}
+    {# ###################### #}
+    {# Create the application #}
+    {# ###################### #}
+
+    {%
+        local consumer = ngx.ctx.authenticated_consumer
+        local developer, err = kong.db.developers:select_by_email(consumer.username)
+        local body, err, mimetype = kong.request.get_body()
+        local app_name = body["application[name]"]
+        local opts = {
+            username = app_name,
+            tags = { developer.id },
+        }
+        local result, err = kong.myservices.add_application(opts)
+
+        if not err then
+            kong.response.exit(302, "Moved", {
+                ["Location"] = "/default/applications"
+            })
+        else
+            page.error = err
+        end
+
+    %}
+
+    {% end %}
+
+    {%
+        local result, err = kong.db.consumers:select { id = kong.request.get_query_arg("app_id") }
+    %}
+
+    {% if page.error then %}
+    <b>Error: {{ page.error }}</b>
+    {% end %}
+
+<form class="new_application" id="new_application"
+      aria-labelledby="application_form_label" action="applications/settings"
+      accept-charset="UTF-8" method="post">
+
+    <dl class="form-group required">
+        <dt class="input-label"><label required="required" autofocus="autofocus"
+                                       for="application_name">Application name</label></dt>
+        <dd><input aria-describedby="description_e1c36b13edce" class="form-control wide"
+                   required="required" autofocus="autofocus" type="text" name="application[name]"
+                   id="application_name" value="{{ result.username }}">
+            <p class="note" id="description_e1c36b13edce">Something users will recognize and trust.</p>
+        </dd>
+    </dl>
+
+    <dl class="form-group">
+        <dt class="input-label"><label for="application_url">Homepage
+            URL</label></dt>
+        <dd><input aria-describedby="description_4db0d574bb38" class="form-control wide"
+                   placeholder="Optional application URL" type="text" name="application[url]"
+                   id="application_url">
+            <p class="note" id="description_4db0d574bb38">The full URL to your application homepage.</p>
+        </dd>
+
+        <dt class="input-label"><label for="application_description" class="short"
+                                       placeholder="Application description is optional">Application
+            description</label></dt>
+        <dd><textarea aria-describedby="description_16cb2c98e5eb" for="application_description"
+                      class="form-control short" placeholder="Application description is optional"
+                      name="application[description]"
+                      id="application_description"></textarea>
+            <p class="note" id="description_16cb2c98e5eb">This is displayed to all users of your
+                application.</p></dd>
+    </dl>
+
+    <hr class="form-hr">
+    <p>
+        {% if not result then %}
+        <button type="submit" class="btn btn-primary">Register application</button>
+        {% end %}
+    </p>
+
+</form>

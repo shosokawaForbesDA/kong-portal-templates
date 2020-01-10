@@ -1,0 +1,7 @@
+---
+readable_by: '*'
+layout: applications_settings.html
+title: Application Settings
+
+private: true
+---

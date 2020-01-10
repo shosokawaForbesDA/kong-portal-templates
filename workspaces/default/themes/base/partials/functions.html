@@ -1,0 +1,136 @@
+{%
+    kong.myservices = {}
+
+    kong.myservices.application_limit = function(developer_id)
+        return 3
+    end
+
+    kong.myservices.regenerate_apikey = function(consumer)
+        local http = require "resty.http"
+        local httpc = http.new()
+        local ok, err = httpc:connect("localhost", 8001)
+        local path = "/default/consumers/"..opts.username.."/key-auth"
+
+        local res, err = httpc:request({
+            method = "DELETE",
+            path = "/default/consumers",
+            query = { ["tags"] = developer_id },
+        })
+        return cjson.decode(res:read_body())
+    end
+
+    kong.myservices.get_consumers = function(developer_id)
+        local cjson = require "cjson"
+        local http = require "resty.http"
+        local httpc = http.new()
+        local ok, err = httpc:connect("localhost", 8001)
+        local res, err = httpc:request({
+            method = "GET",
+            path = "/default/consumers",
+            query = { ["tags"] = developer_id },
+        })
+        return cjson.decode(res:read_body())
+    end
+
+    kong.myservices.get_application_credentials = function(application_id)
+        local cjson = require "cjson"
+        local http = require "resty.http"
+        local httpc = http.new()
+        local ok, err = httpc:connect("localhost", 8001)
+        local res, err = httpc:request({
+            method = "GET",
+            path = "/default/consumers/"..application_id.."/key-auth",
+        })
+        return cjson.decode(res:read_body())
+    end
+
+    kong.myservices.whitelist_groups = function()
+        local cjson = require "cjson"
+        local http = require "resty.http"
+        local httpc = http.new()
+        local ok, err = httpc:connect("localhost", 8001)
+        local res, err = httpc:request({
+            method = "GET",
+            path = "/default/plugins",
+        })
+
+        local plugins = cjson.decode(res:read_body())
+        local groups = {}
+        for _, plugin in pairs(plugins.data) do
+            if plugin.name == 'acl' then
+                for _, group in pairs(plugin.config.whitelist) do
+                    groups[group] = true
+                end
+            end
+
+        end
+
+        return groups
+    end
+
+    kong.myservices.add_application = function(opts)
+        local consumer = ngx.ctx.authenticated_consumer
+        local developer, err = kong.db.developers:select_by_email(consumer.username)
+        local consumers = kong.myservices.get_consumers(developer.id)
+        local limit = kong.myservices.application_limit(developer.id)
+
+        if #consumers.data >= limit then
+            return nil, "Cannot exceed application limit of "..limit
+        end
+
+        local cjson = require "cjson"
+        local http = require "resty.http"
+        local httpc = http.new()
+        local ok, err = httpc:connect("localhost", 8001)
+        local str = cjson.encode(opts)
+        local res, err = httpc:request({
+            headers = {
+                ["Content-Type"] = "application/json",
+            },
+            method = "POST",
+            path = "/default/consumers",
+            body = str,
+        })
+
+        -- create the credentials
+        local path = "/default/consumers/"..opts.username.."/key-auth"
+        httpc = http.new()
+        ok, err = httpc:connect("localhost", 8001)
+        res, err = httpc:request({
+            headers = {
+                ["Content-Type"] = "application/json",
+            },
+            method = "POST",
+            path = path,
+            body = "{}",
+        })
+
+        local tbl = cjson.decode(res:read_body())
+        local client_secret = tbl.key
+
+        -- fetch available whitelist groups and each group to the consumer
+        local groups = kong.myservices.whitelist_groups()
+        local path = "/default/consumers/"..opts.username.."/acls"
+
+        for group, _ in pairs(groups) do
+            httpc = http.new()
+            ok, err = httpc:connect("localhost", 8001)
+            res, err = httpc:request({
+                headers = {
+                    ["Content-Type"] = "application/json",
+                },
+                method = "POST",
+                path = path,
+                body = cjson.encode({
+                    ["group"] = group,
+                }),
+            })
+        end
+
+        return {
+            ["client_secret"] = client_secret,
+            ["username"] = opts.username,
+        }, nil
+    end
+
+%}

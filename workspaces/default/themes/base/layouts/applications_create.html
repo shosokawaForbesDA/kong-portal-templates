@@ -1,0 +1,65 @@
+{% layout = "layouts/_page.html" %}
+
+{-content-}
+
+{%
+    local result, err = kong.db.consumers:select { id = kong.request.get_query_arg("app_id") }
+%}
+
+<div class="application">
+    <div class="container">
+        <div class="settings-next">
+            <h4>
+                Register a new application
+            </h4>
+
+            <form class="new_application" id="new_application"
+                  aria-labelledby="application_form_label" action="applications/settings"
+                  accept-charset="UTF-8" method="post">
+
+                <dl class="form-group mt-0 required">
+                    <dt class="input-label"><label required="required" autofocus="autofocus"
+                                                   for="application_name">Application name</label></dt>
+                    <dd><input aria-describedby="description_e1c36b13edce" class="form-control wide"
+                               required="required" autofocus="autofocus" type="text" name="application[name]"
+                               id="application_name" value="{{ result.username }}">
+                        <p class="note" id="description_e1c36b13edce">Something users will recognize and trust.</p>
+                    </dd>
+                </dl>
+
+                <dl class="form-group required">
+                    <dt class="input-label"><label required="required" for="application_url">Homepage
+                        URL</label></dt>
+                    <dd><input aria-describedby="description_4db0d574bb38" class="form-control wide"
+                               required="required" type="text" name="application[url]"
+                               id="application_url">
+                        <p class="note" id="description_4db0d574bb38">The full URL to your application homepage.</p>
+                    </dd>
+                </dl>
+
+                <dl class="form-group">
+                    <dt class="input-label"><label for="application_description" class="short"
+                                                   placeholder="Application description is optional">Application
+                        description</label></dt>
+                    <dd><textarea aria-describedby="description_16cb2c98e5eb" for="application_description"
+                                  class="form-control short" placeholder="Application description is optional"
+                                  name="application[description]"
+                                  id="application_description"></textarea>
+                        <p class="note" id="description_16cb2c98e5eb">This is displayed to all users of your
+                            application.</p></dd>
+                </dl>
+
+                <hr class="form-hr">
+                <p>
+                    {% if not result then %}
+                    <button type="submit" class="btn btn-primary">Register application</button>
+                    {% end %}
+                    <button class="btn btn-link" onclick="window.history.go(-1)">Cancel</button>
+                </p>
+
+            </form>
+        </div>
+
+    </div>
+</div>
+{-content-}

@@ -1,0 +1,58 @@
+{% layout = "layouts/_page.html" %}
+{(partials/functions.html)}
+
+{-content-}
+
+<div class="container">
+    {%
+    local consumer = ngx.ctx.authenticated_consumer
+    local developer, err = kong.db.developers:select_by_email(consumer.username)
+    local consumers = kong.myservices.get_consumers(developer.id)
+    %}
+    <header class="page-header">
+        <div class="row">
+            <h3><span class="float left-title">My Applications</span></h3>
+        </div>
+    </header>
+    <table>
+        <thead>
+            <tr>
+                <th> application</th>
+                <th>&nbsp;</th>
+                <th>&nbsp;</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for _, consumer in pairs(consumers.data) do %}
+            <tr>
+                <td>{{ consumer.username }}</td>
+                <td><a href="applications/settings?app_id={{ consumer.id }}" class="btn btn-link">View</a></td>
+                <td>
+                    <button data-v-3662fbe6="" data-v-443ac6d0="" type="button" class="btn delete btn-link"
+                        data-v-05614a1f="">
+                        <svg data-v-0642d536="" data-v-443ac6d0="" height="16" width="14" role="img"
+                            class="kong-icon kong-icon-trash" data-v-3662fbe6="">
+                            <title data-v-0642d536="">trash</title>
+                            <g data-v-0642d536="">
+                                <path data-v-0642d536=""
+                                    d="M3 3V2c0-1.1045695.8954305-2 2-2h4c1.1045695 0 2 .8954305 2 2v1h2c.5522847 0 1 .4477153 1 1v1H0V4c0-.5522847.4477152-1 1-1h2zm2 0V2h4v1H5zM1 6h2v8h8V6h2v8c0 1.1045695-.8954305 2-2 2H3c-1.1045695 0-2-.8954305-2-2V6zm5 0v7c-.5522847 0-1-.4477153-1-1V7c0-.5522847.4477153-1 1-1zm2 0c.5522847 0 1 .4477153 1 1v5c0 .5522847-.4477153 1-1 1V6z"
+                                    fill="#BFBFBF" fill-rule="evenodd"></path>
+                            </g>
+                        </svg>
+                    </button>
+                </td>
+            </tr>
+            {% end %}
+        </tbody>
+    </table>
+
+    <a href="applications/settings" class="btn btn-link">Create New Application</a>
+
+    <br>
+
+    
+    
+    <script type="text/babel" src="assets/js/main.js"></script>
+
+</div>
+{-content-}

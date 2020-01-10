@@ -1,0 +1,31 @@
+{% layout = "layouts/_page.html" %}
+
+{-content-}
+
+{%
+    local application_id = kong.request.get_query_arg("app_id") or nil
+    local appliction = nil
+
+    if application_id then
+        page.mystuff = {}
+        page.mystuff.application_id = application_id
+    end
+%}
+
+<div class="application">
+    <div class="container">
+        <h4>
+            {% if not application_id then %}
+            Register a new application
+            {% end %}
+        </h4>
+
+        {% if application_id then %}
+        {(partials/client_secret.html)}
+        {% end %}
+
+        {(partials/application_form.html)}
+    </div>
+</div>
+
+{-content-}

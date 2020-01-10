@@ -5,6 +5,7 @@
         return 3
     end
 
+    -- TODO
     kong.myservices.regenerate_apikey = function(consumer)
         local http = require "resty.http"
         local httpc = http.new()
